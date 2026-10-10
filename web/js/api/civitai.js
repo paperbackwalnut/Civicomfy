@@ -161,4 +161,29 @@ export class CivitaiDownloaderAPI {
       headers: { "Content-Type": "application/json" },
     });
   }
+  static async searchWorkflows(params) {
+    return this._request("/civitai/workflows/search", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(params),
+    });
+  }
+
+  static async getWorkflowSettings() {
+    return this._request("/civitai/workflows/settings");
+  }
+
+  static async setWorkflowRoot(workflow_root) {
+    return this._request("/civitai/workflows/settings", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ workflow_root }),
+    });
+  }
+
+  static async downloadWorkflow(version_id, filename, api_key) {
+    return this._request("/civitai/workflows/download", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ version_id, filename, api_key }),
+    });
+  }
+
 }
