@@ -13,6 +13,7 @@ export function modalTemplate(settings = {}) {
         <div class="civitai-downloader-tabs">
           <button class="civitai-downloader-tab active" data-tab="download">Download</button>
           <button class="civitai-downloader-tab" data-tab="search">Search</button>
+          <button class="civitai-downloader-tab" data-tab="workflows">Workflows</button>
           <button class="civitai-downloader-tab" data-tab="status">Status <span id="civitai-status-indicator" style="display: none;">(<span id="civitai-active-count">0</span>)</span></button>
           <button class="civitai-downloader-tab" data-tab="settings">Settings</button>
         </div>
@@ -93,6 +94,16 @@ export function modalTemplate(settings = {}) {
           <div id="civitai-search-results" class="civitai-search-results"></div>
           <div id="civitai-search-pagination" style="text-align: center; margin-top: 20px;"></div>
         </div>
+        <div id="civitai-tab-workflows" class="civitai-downloader-tab-content">
+          <form id="civitai-workflow-search-form" class="civitai-search-controls">
+            <label for="civitai-workflow-query">Find Civitai workflows</label>
+            <input id="civitai-workflow-query" class="civitai-input" type="search" placeholder="Workflow name or keywords" maxlength="200">
+            <button class="civitai-button primary" type="submit">Search workflows</button>
+          </form>
+          <p id="civitai-workflow-destination" style="word-break:break-all;"></p>
+          <div id="civitai-workflow-results" class="civitai-search-results" aria-live="polite"></div>
+          <button id="civitai-workflow-next" class="civitai-button small" type="button" hidden>Next page</button>
+        </div>
         <div id="civitai-tab-status" class="civitai-downloader-tab-content">
           <div id="civitai-status-content">
             <div class="civitai-status-section">
@@ -140,6 +151,12 @@ export function modalTemplate(settings = {}) {
                     <button type="button" id="civitai-settings-set-global-root" class="civitai-button small">Set Global Root</button>
                     <button type="button" id="civitai-settings-clear-global-root" class="civitai-button danger small">Clear Global Root</button>
                   </div>
+                </div>
+                <div class="civitai-form-group">
+                  <label for="civitai-settings-workflow-root">Workflow Download Folder</label>
+                  <input id="civitai-settings-workflow-root" type="text" class="civitai-input" placeholder="Absolute path to existing workflows directory">
+                  <button id="civitai-settings-set-workflow-root" class="civitai-button small" type="button">Set Workflow Folder</button>
+                  <p style="font-size: 0.85em; color:#bbb;">Workflow JSON downloads are saved here. The directory must already exist.</p>
                 </div>
                 <div class="civitai-form-group">
                   <label for="civitai-settings-connections">Default Connections</label>
