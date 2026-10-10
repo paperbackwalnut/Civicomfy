@@ -31,6 +31,7 @@ export class CivitaiDownloaderUI {
         this.statusData = { queue: [], active: [], history: [] };
         this.baseModels = [];
         this.searchPagination = { currentPage: 1, totalPages: 1, limit: 20 };
+        this.workflowPage = 1;
         this.settings = this.getDefaultSettings();
         this.toastTimeout = null;
         this.modelPreviewDebounceTimeout = null;
@@ -82,6 +83,15 @@ export class CivitaiDownloaderUI {
         this.searchResultsContainer = this.modal.querySelector('#civitai-search-results');
         this.searchPaginationContainer = this.modal.querySelector('#civitai-search-pagination');
 
+        // Workflows Tab
+        this.workflowForm = this.modal.querySelector('#civitai-workflow-search-form');
+        this.workflowQuery = this.modal.querySelector('#civitai-workflow-query');
+        this.workflowResults = this.modal.querySelector('#civitai-workflow-results');
+        this.workflowNext = this.modal.querySelector('#civitai-workflow-next');
+        this.workflowDestination = this.modal.querySelector('#civitai-workflow-destination');
+        this.workflowRootInput = this.modal.querySelector('#civitai-settings-workflow-root');
+        this.workflowRootButton = this.modal.querySelector('#civitai-settings-set-workflow-root');
+
         // Status Tab
         this.statusContent = this.modal.querySelector('#civitai-status-content');
         this.activeListContainer = this.modal.querySelector('#civitai-active-list');
@@ -128,6 +138,7 @@ export class CivitaiDownloaderUI {
         await this.populateBaseModels();
         this.loadAndApplySettings();
         await this.loadGlobalRootSetting();
+        await this.loadWorkflowDestination();
         if (this.downloadModelTypeSelect) {
             await this.loadAndPopulateSubdirs(this.downloadModelTypeSelect.value);
         }
@@ -225,6 +236,66 @@ export class CivitaiDownloaderUI {
         } catch (error) {
              console.error("[Civicomfy] Failed to get or populate base models:", error);
              this.showToast('Failed to load base models list', 'error');
+        }
+    }
+
+
+    async loadWorkflowDestination() {
+        try {
+            const data = await CivitaiDownloaderAPI.getWorkflowSettings();
+            this.workflowRootInput.value = data.workflow_root || '';
+            this.workflowDestination.textContent = 'Saving to: ' + (data.workflow_root || '(not configured)');
+        } catch (error) {
+            this.workflowDestination.textContent = 'Unable to load workflow destination';
+        }
+    }
+
+    async searchWorkflows() {
+        this.workflowResults.textContent = 'Searching...';
+        this.workflowNext.hidden = true;
+        try {
+            const data = await CivitaiDownloaderAPI.searchWorkflows({
+                query: this.workflowQuery.value.trim(),
+                page: this.workflowPage,
+                limit: 20,
+            });
+            const items = Array.isArray(data?.items) ? data.items : [];
+            this.workflowResults.replaceChildren();
+            if (!items.length) this.workflowResults.textContent = 'No matching workflows found.';
+            for (const item of items) {
+                const card = document.createElement('div');
+                card.className = 'civitai-download-list-item';
+                card.style.padding = '12px';
+                card.style.marginBottom = '8px';
+                const title = document.createElement('strong');
+                title.textContent = item.name || 'Untitled workflow';
+                const info = document.createElement('p');
+                info.textContent = 'By ' + (item.creator?.username || 'Unknown') + ' · ' + (item.stats?.downloadCount || 0) + ' downloads';
+                const version = Array.isArray(item.modelVersions) ? item.modelVersions[0] : null;
+                card.append(title, info);
+                if (version?.id) {
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.className = 'civitai-button small';
+                    button.textContent = 'Download JSON';
+                    button.addEventListener('click', async () => {
+                        button.disabled = true;
+                        try {
+                            const result = await CivitaiDownloaderAPI.downloadWorkflow(version.id, null, this.settings.apiKey);
+                            this.showToast('Saved workflow: ' + result.filename, 'success');
+                        } catch (error) {
+                            this.showToast(error.details || error.message || 'Workflow download failed', 'error', 6000);
+                        } finally {
+                            button.disabled = false;
+                        }
+                    });
+                    card.appendChild(button);
+                }
+                this.workflowResults.appendChild(card);
+            }
+            this.workflowNext.hidden = !data?.metadata?.nextPage;
+        } catch (error) {
+            this.workflowResults.textContent = error.details || error.message || 'Workflow search failed';
         }
     }
 
