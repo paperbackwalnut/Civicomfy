@@ -13,6 +13,26 @@ export function setupEventListeners(ui) {
         }
     });
 
+    // Workflow search and download settings
+    ui.workflowForm.addEventListener('submit', event => {
+        event.preventDefault();
+        ui.workflowPage = 1;
+        ui.searchWorkflows();
+    });
+    ui.workflowNext.addEventListener('click', () => {
+        ui.workflowPage += 1;
+        ui.searchWorkflows();
+    });
+    ui.workflowRootButton.addEventListener('click', async () => {
+        try {
+            await CivitaiDownloaderAPI.setWorkflowRoot(ui.workflowRootInput.value.trim());
+            await ui.loadWorkflowDestination();
+            ui.showToast('Workflow download folder updated', 'success');
+        } catch (error) {
+            ui.showToast(error.details || error.message || 'Unable to update workflow folder', 'error');
+        }
+    });
+
     // --- FORMS ---
     ui.downloadForm.addEventListener('submit', (event) => {
         event.preventDefault();
