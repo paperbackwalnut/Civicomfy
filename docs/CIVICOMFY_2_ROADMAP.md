@@ -51,7 +51,7 @@
 
 ## Phase 6: Civitai workflow discovery and import
 - [x] Add workflow search API, configured workflow destination and JSON-only download endpoints (backend, experimental).
-- [ ] Add a workflow browser tab and destination settings controls to ComfyUI frontend.
+- [x] Wire an initial workflow browser tab and directory controls into existing Civicomfy modal (unverified in running ComfyUI).
 - [ ] Support safely resolved Civitai CDN redirects with no token leakage and validate actual Civitai workflow file formats.
 - [ ] Verify downloaded workflow compatibility; provide explicit missing-node/model warnings.
 - [ ] Add endpoint tests for invalid JSON, oversized downloads, path safety, duplicate files and redirects.
