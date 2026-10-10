@@ -17,5 +17,6 @@ from . import GetStatus
 from . import OpenPath
 from . import RetryDownload
 from . import SearchModels
+from . import Workflows
 
 print("[Civicomfy] All server route modules loaded.")
