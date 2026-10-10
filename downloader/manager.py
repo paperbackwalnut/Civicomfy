@@ -225,7 +225,7 @@ class DownloadManager:
 
             if isinstance(loaded_data, list):
                 # Basic validation: Ensure items have IDs (optional but good)
-                validated_history = [item for item in loaded_data if isinstance(item, dict) and 'id' in item]
+                validated_history = [{k: v for k, v in item.items() if k != 'api_key'} for item in loaded_data if isinstance(item, dict) and 'id' in item]
                 invalid_count = len(loaded_data) - len(validated_history)
                 if invalid_count > 0:
                     print(f"[Manager Warning] {invalid_count} items removed from loaded history due to missing 'id'.")
@@ -251,7 +251,7 @@ class DownloadManager:
     def _save_history_to_file(self):
         """Saves the current in-memory history list to the JSON file."""
         # Assumes self.lock is HELD when this is called
-        history_to_save = self.history[:DOWNLOAD_HISTORY_LIMIT] # Ensure limit before saving
+        history_to_save = [{k: v for k, v in item.items() if k != 'api_key'} for item in self.history[:DOWNLOAD_HISTORY_LIMIT]]
 
         try:
             # Ensure directory exists (should already, but belt-and-suspenders)
@@ -281,7 +281,7 @@ class DownloadManager:
         # --- (Keep existing logic to prepare info_copy) ---
         info_copy = {
             k: v for k, v in download_info.items()
-            if k not in ['downloader_instance']
+            if k not in ['downloader_instance', 'api_key']
         }
         if "end_time" not in info_copy or info_copy["end_time"] is None:
              info_copy["end_time"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
@@ -693,9 +693,12 @@ class DownloadManager:
             # Make a deep copy to avoid modifying the history item directly
             try:
                 retry_info = json.loads(json.dumps(original_info))
-                print(retry_info)
+                # Never log retry payloads: they may contain private metadata.
             except Exception as e:
                  return {"success": False, "error": f"Failed to copy original download data: {e}"}
+
+            # Fetch authentication from the current environment; never from stored history.
+            retry_info['api_key'] = os.getenv('CIVITAI_API_KEY') or None
 
             # Remove fields specific to the *previous* attempt
             retry_info.pop("id", None) # Will get a new ID
