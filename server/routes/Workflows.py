@@ -5,6 +5,7 @@ Workflow files are untrusted data. Never execute imported workflow content.
 import asyncio
 import json
 import os
+import re
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -14,7 +15,6 @@ import server
 from aiohttp import web
 
 from ...config import PLUGIN_ROOT
-from ...utils.helpers import sanitize_filename
 from ..utils import resolve_civitai_api_key
 
 routes = server.PromptServer.instance.routes
@@ -34,9 +34,10 @@ def workflow_root():
 
 
 def _safe_filename(name):
-    name = sanitize_filename(name or "civitai-workflow")
-    stem = Path(name).stem or "civitai-workflow"
-    return sanitize_filename(stem) + ".json"
+    raw = str(name or "civitai-workflow").replace("\\", "/").split("/")[-1]
+    stem = Path(raw).stem or "civitai-workflow"
+    stem = re.sub(r"[^A-Za-z0-9._ -]", "_", stem).strip(" .")[:120]
+    return (stem or "civitai-workflow") + ".json"
 
 
 def _civitai_search(query, page, limit, api_key):
